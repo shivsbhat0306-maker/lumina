@@ -1,0 +1,31 @@
+# Used by every `fly deploy .` build (agent and gateway), since both build from the repo root.
+# Keeps the Docker build context small and, importantly, keeps real secrets and local-only
+# artifacts out of the image entirely.
+
+**/node_modules
+.git
+
+# Never let real secrets or local env files into an image layer.
+.env
+.env.*
+!.env.example
+
+# Local build output — each Dockerfile builds fresh inside the container.
+**/dist
+web/dist
+
+# Local-only data, not needed by either backend service at runtime.
+runs
+test_pdf.pdf
+test.txt
+.claude
+*.log
+
+# reports/ is local-only EXCEPT report.json: the gateway serves that one file itself at
+# GET /evals/report.json (env.ts's reportsFile), which the provided UI renders at /evals — the
+# grader's whole product-evaluation page depends on it actually being in the deployed image.
+# `reports/*` (not the bare directory name `reports`) is required here: Docker's .dockerignore
+# can't un-ignore one file with `!` once a bare directory pattern has already excluded the whole
+# directory, so matching only its immediate contents is what makes the negation below work.
+reports/*
+!reports/report.json
